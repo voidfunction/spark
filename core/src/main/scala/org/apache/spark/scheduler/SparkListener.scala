@@ -39,6 +39,9 @@ trait SparkListenerEvent {
 }
 
 @DeveloperApi
+case class SparkListenerOutputWriter() extends SparkListenerEvent
+
+@DeveloperApi
 case class SparkListenerStageSubmitted(stageInfo: StageInfo, properties: Properties = null)
   extends SparkListenerEvent
 

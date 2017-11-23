@@ -266,6 +266,8 @@ object HistoryServer extends Logging {
   val UI_PATH_PREFIX = "/history"
 
   def main(argStrings: Array[String]): Unit = {
+    conf.set("spark.history.fs.logDirectory", "file:///C:/Users/ltian/gitproject/logs")
+
     Utils.initDaemon(log)
     new HistoryServerArguments(conf, argStrings)
     initSecurity()
