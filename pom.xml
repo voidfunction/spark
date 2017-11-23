@@ -30,56 +30,6 @@
   <packaging>pom</packaging>
   <name>Spark Project Parent POM</name>
   <url>http://spark.apache.org/</url>
-  <licenses>
-    <license>
-      <name>Apache 2.0 License</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <connection>scm:git:git@github.com:apache/spark.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/spark.git</developerConnection>
-    <url>scm:git:git@github.com:apache/spark.git</url>
-    <tag>HEAD</tag>
-  </scm>
-  <developers>
-    <developer>
-      <id>matei</id>
-      <name>Matei Zaharia</name>
-      <email>matei.zaharia@gmail.com</email>
-      <url>http://www.cs.berkeley.edu/~matei</url>
-      <organization>Apache Software Foundation</organization>
-      <organizationUrl>http://spark.apache.org</organizationUrl>
-    </developer>
-  </developers>
-  <issueManagement>
-    <system>JIRA</system>
-    <url>https://issues.apache.org/jira/browse/SPARK</url>
-  </issueManagement>
-
-  <mailingLists>
-    <mailingList>
-      <name>Dev Mailing List</name>
-      <post>dev@spark.apache.org</post>
-      <subscribe>dev-subscribe@spark.apache.org</subscribe>
-      <unsubscribe>dev-unsubscribe@spark.apache.org</unsubscribe>
-    </mailingList>
-
-    <mailingList>
-      <name>User Mailing List</name>
-      <post>user@spark.apache.org</post>
-      <subscribe>user-subscribe@spark.apache.org</subscribe>
-      <unsubscribe>user-unsubscribe@spark.apache.org</unsubscribe>
-    </mailingList>
-
-    <mailingList>
-      <name>Commits Mailing List</name>
-      <post>commits@spark.apache.org</post>
-      <subscribe>commits-subscribe@spark.apache.org</subscribe>
-      <unsubscribe>commits-unsubscribe@spark.apache.org</unsubscribe>
-    </mailingList>
-  </mailingLists>
 
   <modules>
     <module>common/sketch</module>
@@ -88,26 +38,26 @@
     <module>common/unsafe</module>
     <module>common/tags</module>
     <module>core</module>
-    <module>graphx</module>
-    <module>mllib</module>
-    <module>mllib-local</module>
-    <module>tools</module>
-    <module>streaming</module>
-    <module>sql/catalyst</module>
-    <module>sql/core</module>
-    <module>sql/hive</module>
-    <module>assembly</module>
-    <module>external/flume</module>
-    <module>external/flume-sink</module>
-    <module>external/flume-assembly</module>
-    <module>examples</module>
-    <module>repl</module>
-    <module>launcher</module>
-    <module>external/kafka-0-8</module>
-    <module>external/kafka-0-8-assembly</module>
-    <module>external/kafka-0-10</module>
-    <module>external/kafka-0-10-assembly</module>
-    <module>external/kafka-0-10-sql</module>
+    <!--<module>graphx</module>-->
+    <!--<module>mllib</module>-->
+    <!--<module>mllib-local</module>-->
+    <!--<module>tools</module>-->
+    <!--<module>streaming</module>-->
+    <!--<module>sql/catalyst</module>-->
+    <!--<module>sql/core</module>-->
+    <!--<module>sql/hive</module>-->
+    <!--<module>assembly</module>-->
+    <!--<module>external/flume</module>-->
+    <!--<module>external/flume-sink</module>-->
+    <!--<module>external/flume-assembly</module>-->
+    <!--<module>examples</module>-->
+    <!--<module>repl</module>-->
+    <!--<module>launcher</module>-->
+    <!--<module>external/kafka-0-8</module>-->
+    <!--<module>external/kafka-0-8-assembly</module>-->
+    <!--<module>external/kafka-0-10</module>-->
+    <!--<module>external/kafka-0-10-assembly</module>-->
+    <!--<module>external/kafka-0-10-sql</module>-->
   </modules>
 
   <properties>
