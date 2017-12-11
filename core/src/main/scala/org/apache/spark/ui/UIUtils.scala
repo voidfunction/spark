@@ -178,6 +178,11 @@ private[spark] object UIUtils extends Logging {
     <script>setUIRoot('{UIUtils.uiRoot}')</script>
   }
 
+  // dark theme style
+  def themeNode: Seq[Node] = {
+    <link rel="stylesheet" href={prependBaseUri("/static/darktheme.css")} type="text/css"/>
+  }
+
   def vizHeaderNodes: Seq[Node] = {
     <link rel="stylesheet" href={prependBaseUri("/static/spark-dag-viz.css")} type="text/css" />
     <script src={prependBaseUri("/static/d3.min.js")}></script>
@@ -218,9 +223,11 @@ private[spark] object UIUtils extends Logging {
       </li>
     }
     val helpButton: Seq[Node] = helpText.map(tooltip(_, "bottom")).getOrElse(Seq.empty)
+    val isDarkTheme: Boolean = true
 
     <html>
       <head>
+        {if (isDarkTheme) themeNode else Seq.empty}
         {commonHeaderNodes}
         {if (showVisualization) vizHeaderNodes else Seq.empty}
         {if (useDataTables) dataTablesHeaderNodes else Seq.empty}
@@ -263,6 +270,7 @@ private[spark] object UIUtils extends Logging {
       useDataTables: Boolean = false): Seq[Node] = {
     <html>
       <head>
+        {themeNode}
         {commonHeaderNodes}
         {if (useDataTables) dataTablesHeaderNodes else Seq.empty}
         <title>{title}</title>
