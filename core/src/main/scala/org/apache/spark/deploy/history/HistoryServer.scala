@@ -241,6 +241,13 @@ object HistoryServer extends Logging {
   val UI_PATH_PREFIX = "/history"
 
   def main(argStrings: Array[String]): Unit = {
+    val eventLog = "file:///C:/Users/ltian/IdeaProjects/sparktest/tmp/spark-events"
+    conf.set("spark.history.fs.logDirectory", eventLog)
+//    conf.set("spark.history.fs.logDirectory", "file:///C:/Users/ltian/gitproject/logs")
+    conf.set("spark.ui.allowFramingFrom", "http://localhost")
+    conf.set("spark.history.kerberos.enabled", "false")
+    conf.set("spark.history.ui.port", "18080")
+
     Utils.initDaemon(log)
     new HistoryServerArguments(conf, argStrings)
     initSecurity()

@@ -21,12 +21,13 @@ import java.util.{Date, ServiceLoader}
 
 import scala.collection.JavaConverters._
 
-import org.apache.spark.{Logging, SecurityManager, SparkConf, SparkContext}
+import org.apache.spark.{SecurityManager, SparkConf, SparkContext}
+import org.apache.spark.Logging
 import org.apache.spark.scheduler._
-import org.apache.spark.status.api.v1.{ApiRootResource, ApplicationAttemptInfo, ApplicationInfo,
-  UIRoot}
+import org.apache.spark.status.api.v1.{ApiRootResource, ApplicationAttemptInfo, ApplicationInfo, UIRoot}
 import org.apache.spark.storage.StorageStatusListener
 import org.apache.spark.ui.JettyUtils._
+import org.apache.spark.ui.data.{DataListener, DataTab}
 import org.apache.spark.ui.env.{EnvironmentListener, EnvironmentTab}
 import org.apache.spark.ui.exec.{ExecutorsListener, ExecutorsTab}
 import org.apache.spark.ui.jobs.{JobProgressListener, JobsTab, StagesTab}
@@ -47,6 +48,7 @@ private[spark] class SparkUI private (
     val jobProgressListener: JobProgressListener,
     val storageListener: StorageListener,
     val operationGraphListener: RDDOperationGraphListener,
+    val dataListener: DataListener,
     var appName: String,
     val basePath: String,
     val startTime: Long)
@@ -69,6 +71,7 @@ private[spark] class SparkUI private (
     attachTab(new StorageTab(this))
     attachTab(new EnvironmentTab(this))
     attachTab(new ExecutorsTab(this))
+    attachTab(new DataTab(this))
     attachHandler(createStaticHandler(SparkUI.STATIC_RESOURCE_DIR, "/static"))
     attachHandler(createRedirectHandler("/", "/jobs/", basePath = basePath))
     attachHandler(ApiRootResource.getServletHandler(this))
@@ -200,15 +203,18 @@ private[spark] object SparkUI {
     val executorsListener = new ExecutorsListener(storageStatusListener, conf)
     val storageListener = new StorageListener(storageStatusListener)
     val operationGraphListener = new RDDOperationGraphListener(conf)
+    val dataListener = new DataListener()
 
     listenerBus.addListener(environmentListener)
     listenerBus.addListener(storageStatusListener)
     listenerBus.addListener(executorsListener)
     listenerBus.addListener(storageListener)
     listenerBus.addListener(operationGraphListener)
+    listenerBus.addListener(dataListener)
 
     new SparkUI(sc, conf, securityManager, environmentListener, storageStatusListener,
       executorsListener, _jobProgressListener, storageListener, operationGraphListener,
+      dataListener,
       appName, basePath, startTime)
   }
 }
