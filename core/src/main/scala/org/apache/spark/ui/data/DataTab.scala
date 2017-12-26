@@ -17,15 +17,10 @@
 
 package org.apache.spark.ui.data
 
-import java.util.concurrent.locks.ReentrantLock
-
 import org.apache.spark.annotation.DeveloperApi
+import org.apache.spark.hdi.{InputInformationUpdate, OutputEvent, TableOutputEvent}
 import org.apache.spark.scheduler._
 import org.apache.spark.ui._
-
-// case class OutputEvent(mode: String, schema: StructType,
-// options: Map[String, String], provider: String) extends SparkListenerEvent
-// case class InputEvent(properties: Map[String, String]) extends SparkListenerEvent
 
 private[ui] class DataTab(parent: SparkUI) extends SparkUITab(parent, "data") {
   val listener = parent.dataListener
@@ -35,32 +30,42 @@ private[ui] class DataTab(parent: SparkUI) extends SparkUITab(parent, "data") {
 
 @DeveloperApi
 class DataListener extends SparkListener {
-  var testInformation = Seq[(String, String)]()
-
-  val otherEventLock: ReentrantLock = new ReentrantLock
-  val jobStartEventLock: ReentrantLock = new ReentrantLock
+  var outputInformation = Seq[(String, String, String)]()
+  var inputInformation = Seq[(String, String)]()
+  private val pattern = "^InMemoryFileIndex\\[(.*)\\]$".r
 
   override def onOtherEvent(event: SparkListenerEvent) {
+      event match {
+        case e: OutputEvent =>
+          val path = e.provider match {
+            case "jdbc" =>
+              val dbtable = e.options.getOrElse("dbtable", "None")
+              e.options.get("url").map((url) => {
+                val properties = new java.util.Properties()
+                for (u <- url.split(";")) {
+                  val v = u.split("=")
+                  if (v.length == 2) {
+                    properties.put(v(0), v(1))
+                  }
+                }
+                s"${properties.getProperty("database")} -> $dbtable"
+              }).getOrElse("None")
 
-//    otherEventLock.lock()
-  val v = 1
-//    otherEventLock.unlock()
+            case _ => e.options.getOrElse("path", "None")
+          }
+          outputInformation = outputInformation ++
+            Seq((e.provider, e.mode, path))
+        case e: InputInformationUpdate =>
+          e.locations match {
+            case pattern(locs) =>
+              val inputs = locs.split(",").toSeq.map((e.format, _))
+              inputInformation = inputInformation ++ inputs
+            case _ =>
+          }
+        case e: TableOutputEvent =>
+          outputInformation = outputInformation ++
+            Seq(("table", "Append", String.format("%s->%s", e.database, e.name)))
+        case _ =>
+      }
   }
-
-  override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
-//    jobStartEventLock.lock()
-//    jobStart.stageInfos
-    val v = 1
-//    testInformation = Seq(("testkey", "testvalue"))
-//    jobStartEventLock.unlock()
-  }
-
-//  override def onEnvironmentUpdate(environmentUpdate: SparkListenerEnvironmentUpdate) {
-//
-//    val environmentDetails = environmentUpdate.environmentDetails
-//      jvmInformation = environmentDetails("JVM Information")
-//      sparkProperties = environmentDetails("Spark Properties")
-//      systemProperties = environmentDetails("System Properties")
-//      classpathEntries = environmentDetails("Classpath Entries")
-//  }
 }

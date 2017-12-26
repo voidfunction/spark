@@ -21,18 +21,17 @@ import java.util.{Properties, UUID}
 
 import scala.collection.JavaConverters._
 import scala.collection.Map
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-
 import org.apache.spark._
 import org.apache.spark.executor._
+import org.apache.spark.hdi.{InputInformationUpdate, OutputEvent, TableOutputEvent}
 import org.apache.spark.rdd.RDDOperationScope
-import org.apache.spark.scheduler._
+import org.apache.spark.scheduler.{SparkListenerEvent, _}
 import org.apache.spark.scheduler.cluster.ExecutorInfo
 import org.apache.spark.storage._
 
@@ -514,8 +513,9 @@ private[spark] object JsonProtocol {
     val executorRemoved = Utils.getFormattedClassName(SparkListenerExecutorRemoved)
     val logStart = Utils.getFormattedClassName(SparkListenerLogStart)
     val metricsUpdate = Utils.getFormattedClassName(SparkListenerExecutorMetricsUpdate)
+    val outputUpdate = Utils.getFormattedClassName(OutputEvent)
   }
-
+  case class EmptyEvent() extends SparkListenerEvent
   def sparkEventFromJson(json: JValue): SparkListenerEvent = {
     import SPARK_LISTENER_EVENT_FORMATTED_CLASS_NAMES._
 
@@ -537,9 +537,34 @@ private[spark] object JsonProtocol {
       case `executorRemoved` => executorRemovedFromJson(json)
       case `logStart` => logStartFromJson(json)
       case `metricsUpdate` => executorMetricsUpdateFromJson(json)
-      case other => mapper.readValue(compact(render(json)), Utils.classForName(other))
-        .asInstanceOf[SparkListenerEvent]
+      case "org.apache.spark.sql.hdi.OutputEvent" => outputEventFromJson(json)
+      case "org.apache.spark.sql.hdi.InputEvent" => inputEventFromJson(json)
+      case "org.apache.spark.sql.hdi.TableOutputEvent" => tableOutputEventFromJson(json)
+      case _ => EmptyEvent()
+//      case other => mapper.readValue(compact(render(json)), Utils.classForName(other))
+//        .asInstanceOf[SparkListenerEvent]
     }
+  }
+
+  def tableOutputEventFromJson(json: JValue): TableOutputEvent = {
+    val databaseName = (json \ "database").extract[String]
+    val tableName = (json \ "name").extract[String]
+    TableOutputEvent(databaseName, tableName)
+  }
+
+  def outputEventFromJson(json: JValue): OutputEvent = {
+    val mode = (json \ "mode").extract[String]
+    val provider = (json \ "provider").extract[String]
+    val options = (json \ "options").extract[Map[String, String]]
+    OutputEvent(provider, options.toMap, mode)
+  }
+
+  def inputEventFromJson(json: JValue): InputInformationUpdate = {
+    implicit val formats = DefaultFormats
+    val format = (json \ "properties" \ "Format").extract[String]
+    val locations = (json \ "properties" \ "Location").extract[String]
+    InputInformationUpdate(format, locations)
+//    InputInformationUpdate("abc", "def")
   }
 
   def stageSubmittedFromJson(json: JValue): SparkListenerStageSubmitted = {

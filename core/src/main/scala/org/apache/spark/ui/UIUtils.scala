@@ -224,7 +224,6 @@ private[spark] object UIUtils extends Logging {
     }
     val helpButton: Seq[Node] = helpText.map(tooltip(_, "bottom")).getOrElse(Seq.empty)
     val isDarkTheme: Boolean = true
-
     <html>
       <head>
         {if (isDarkTheme) themeNode else Seq.empty}
