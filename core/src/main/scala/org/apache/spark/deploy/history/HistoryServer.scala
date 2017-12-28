@@ -23,9 +23,7 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 
 import scala.util.control.NonFatal
 import scala.xml.Node
-
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
-
 import org.apache.spark.{SecurityManager, SparkConf}
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.internal.Logging
@@ -33,6 +31,7 @@ import org.apache.spark.internal.config._
 import org.apache.spark.status.api.v1.{ApiRootResource, ApplicationInfo, ApplicationsListResource, UIRoot}
 import org.apache.spark.ui.{SparkUI, UIUtils, WebUI}
 import org.apache.spark.ui.JettyUtils._
+import org.apache.spark.ui.hdinsight.data.DataUtils
 import org.apache.spark.util.{ShutdownHookManager, SystemClock, Utils}
 
 /**
@@ -68,6 +67,11 @@ class HistoryServer(
 
   private val loaderServlet = new HttpServlet {
     protected override def doGet(req: HttpServletRequest, res: HttpServletResponse): Unit = {
+      // handle the request by HDInsight component if 'hdi-request' is exists in request headers
+      if (req.getHeader("hdi-request") != null) {
+        DataUtils.handleAppDataRequest(req, res)
+        return
+      }
       // Parse the URI created by getAttemptURI(). It contains an app ID and an optional
       // attempt ID (separated by a slash).
       val parts = Option(req.getPathInfo()).getOrElse("").split("/")
@@ -264,17 +268,29 @@ object HistoryServer extends Logging {
   private val conf = new SparkConf
 
   val UI_PATH_PREFIX = "/history"
+  /*
+    properties
+      * spark.history.fs.logDirectory
+      * spark.ui.allowFramingFrom
+      * spark.hdinsight.dataFrame
+      are required for standalone history server
 
+   */
   def main(argStrings: Array[String]): Unit = {
-    val eventLog = "file:///C:/Users/ltian/IdeaProjects/sparktest/tmp/spark-events"
-    conf.set("spark.history.fs.logDirectory", eventLog)
-//    conf.set("spark.history.fs.logDirectory", "file:///C:/Users/ltian/gitproject/logs")
-    conf.set("spark.ui.allowFramingFrom", "http://localhost")
-    conf.set("spark.history.kerberos.enabled", "false")
-    conf.set("spark.history.ui.port", "18080")
+//    val eventLog = "file:///C:/Users/ltian/IdeaProjects/sparktest/tmp/spark-events"
+//    conf.set("spark.history.fs.logDirectory", eventLog)
+//    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555")
+//    conf.set("spark.ui.allowFramingFrom", "http://localhost")
+//    conf.set("spark.history.kerberos.enabled", "false")
+//    conf.set("spark.history.ui.port", "18080")
 
     Utils.initDaemon(log)
     new HistoryServerArguments(conf, argStrings)
+
+    assert(conf.getOption("spark.hdinsight.dataFrame").isDefined)
+    assert(conf.getOption("spark.ui.allowFramingFrom").isDefined)
+    assert(conf.getOption("spark.history.fs.logDirectory").isDefined)
+
     initSecurity()
     val securityManager = createSecurityManager(conf)
 

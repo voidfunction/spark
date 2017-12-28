@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ui.data
+package org.apache.spark.ui.hdinsight.data
 
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.hdi.{InputInformationUpdate, OutputEvent, TableOutputEvent}
@@ -30,10 +30,10 @@ private[ui] class DataTab(parent: SparkUI) extends SparkUITab(parent, "data") {
 
 @DeveloperApi
 class DataListener extends SparkListener {
-  var outputInformation = Seq[(String, String, String)]()
-  var inputInformation = Seq[(String, String)]()
+  var outputs = Seq[OutputInfo]()
+  var inputs = Seq[InputInfo]()
   private val pattern = "^InMemoryFileIndex\\[(.*)\\]$".r
-
+  private var inputSetIndex: Int = 0
   override def onOtherEvent(event: SparkListenerEvent) {
       event match {
         case e: OutputEvent =>
@@ -53,18 +53,19 @@ class DataListener extends SparkListener {
 
             case _ => e.options.getOrElse("path", "None")
           }
-          outputInformation = outputInformation ++
-            Seq((e.provider, e.mode, path))
+          outputs = outputs ++
+            Seq(OutputInfo(e.provider, e.mode, path))
         case e: InputInformationUpdate =>
           e.locations match {
             case pattern(locs) =>
-              val inputs = locs.split(",").toSeq.map((e.format, _))
-              inputInformation = inputInformation ++ inputs
+              val input = locs.split(",").toSeq.map(InputInfo(inputSetIndex, e.format, _))
+              inputSetIndex += 1
+              inputs = inputs ++ input
             case _ =>
           }
         case e: TableOutputEvent =>
-          outputInformation = outputInformation ++
-            Seq(("table", "Append", String.format("%s->%s", e.database, e.name)))
+          outputs = outputs ++
+            Seq(OutputInfo("table", "Append", String.format("%s->%s", e.database, e.name)))
         case _ =>
       }
   }

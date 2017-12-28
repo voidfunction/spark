@@ -27,7 +27,7 @@ import org.apache.spark.scheduler._
 import org.apache.spark.status.api.v1.{ApiRootResource, ApplicationAttemptInfo, ApplicationInfo, UIRoot}
 import org.apache.spark.storage.StorageStatusListener
 import org.apache.spark.ui.JettyUtils._
-import org.apache.spark.ui.data.{DataListener, DataTab}
+import org.apache.spark.ui.hdinsight.data.{DataListener, DataTab}
 import org.apache.spark.ui.env.{EnvironmentListener, EnvironmentTab}
 import org.apache.spark.ui.exec.{ExecutorsListener, ExecutorsTab}
 import org.apache.spark.ui.jobs.{JobProgressListener, JobsTab, StagesTab}

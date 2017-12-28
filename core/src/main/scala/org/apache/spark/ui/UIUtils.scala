@@ -205,6 +205,12 @@ private[spark] object UIUtils extends Logging {
     <script src={prependBaseUri("/static/jquery.mustache.js")}></script>
   }
 
+  def dataTabNode: Seq[Node] = {
+    <script type="text/javascript"
+            src={UIUtils.prependBaseUri("/static/data/jobdata.js")}>
+    </script>
+  }
+
   /** Returns a spark page with correctly formatted headers */
   def headerSparkPage(
       title: String,
@@ -224,12 +230,14 @@ private[spark] object UIUtils extends Logging {
     }
     val helpButton: Seq[Node] = helpText.map(tooltip(_, "bottom")).getOrElse(Seq.empty)
     val isDarkTheme: Boolean = true
+
     <html>
       <head>
         {if (isDarkTheme) themeNode else Seq.empty}
         {commonHeaderNodes}
         {if (showVisualization) vizHeaderNodes else Seq.empty}
         {if (useDataTables) dataTablesHeaderNodes else Seq.empty}
+        {if (title == "Data") dataTabNode else Seq.empty}
         <title>{appName} - {title}</title>
       </head>
       <body>
