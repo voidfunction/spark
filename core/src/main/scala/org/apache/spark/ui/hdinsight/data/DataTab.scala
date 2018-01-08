@@ -25,7 +25,7 @@ import org.apache.spark.ui._
 private[ui] class DataTab(parent: SparkUI) extends SparkUITab(parent, "data") {
   val listener = parent.dataListener
   val conf = parent.conf
-  attachPage(new DatePage(this))
+  attachPage(new DataPage(this))
 }
 
 @DeveloperApi

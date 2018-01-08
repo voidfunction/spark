@@ -23,7 +23,7 @@ import scala.xml.Node
 
 import org.apache.spark.ui.{UIUtils, WebUIPage}
 
-private[ui] class DatePage(parent: DataTab) extends WebUIPage("") {
+private[ui] class DataPage(parent: DataTab) extends WebUIPage("") {
   private val listener = parent.listener
   private def outputPropertyHeader = Seq("Provider", "Mode", "Path")
   private def inputPropertyHeader = Seq("Format", "Path")
@@ -31,7 +31,20 @@ private[ui] class DatePage(parent: DataTab) extends WebUIPage("") {
   def dataTabInfoNode: Seq[Node] = {
     <script type="text/javascript">
       ApplicationDataInfo =
-      {scala.xml.Unparsed(DataUtils.getWrappedInfo(listener.inputs, listener.outputs))}
+      {scala.xml.Unparsed(DataUtils.getWrappedInfo(listener.inputs, listener.outputs))};
+    </script>
+  }
+
+  def dataTabNode: Seq[Node] = {
+    <script type="text/javascript">
+      {scala.xml.Unparsed(
+        """
+          window.addEventListener('message', function(event) {
+            if (event.data.eventType === 'iframeReady' && event.data.data === 'ready'){
+              var dataFrame = document.getElementById('datatabiframe');
+              dataFrame.contentWindow.postMessage(ApplicationDataInfo, '*');
+            }
+          });""")};
     </script>
   }
 
@@ -41,6 +54,7 @@ private[ui] class DatePage(parent: DataTab) extends WebUIPage("") {
     val content =
       <div class="container-fluid row" height="0" padding-bottom="100%">
         {dataTabInfoNode}
+        {dataTabNode}
         <iframe id="datatabiframe" sandbox={sandBoxProperties}
                 src="http://localhost:5555"
                 style="width:98vw;height:99vh;position:absolute;"
