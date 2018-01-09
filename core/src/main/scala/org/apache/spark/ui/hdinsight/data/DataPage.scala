@@ -25,8 +25,8 @@ import org.apache.spark.ui.{UIUtils, WebUIPage}
 
 private[ui] class DataPage(parent: DataTab) extends WebUIPage("") {
   private val listener = parent.listener
-  private def outputPropertyHeader = Seq("Provider", "Mode", "Path")
-  private def inputPropertyHeader = Seq("Format", "Path")
+//  private def outputPropertyHeader = Seq("Provider", "Mode", "Path")
+//  private def inputPropertyHeader = Seq("Format", "Path")
 
   def dataTabInfoNode: Seq[Node] = {
     <script type="text/javascript">
@@ -49,6 +49,7 @@ private[ui] class DataPage(parent: DataTab) extends WebUIPage("") {
   }
 
   def render(request: HttpServletRequest): Seq[Node] = {
+    val dataTabIFrameUrl = parent.conf.getOption("spark.hdinsight.dataFrame").getOrElse("")
     val sandBoxProperties = "allow-forms allow-modals allow-scripts " +
       "allow-popups allow-same-origin allow-top-navigation"
     val content =
@@ -56,7 +57,7 @@ private[ui] class DataPage(parent: DataTab) extends WebUIPage("") {
         {dataTabInfoNode}
         {dataTabNode}
         <iframe id="datatabiframe" sandbox={sandBoxProperties}
-                src="http://localhost:5555"
+                src={dataTabIFrameUrl}
                 style="width:98vw;height:99vh;position:absolute;"
                 frameborder="0">
         </iframe>
