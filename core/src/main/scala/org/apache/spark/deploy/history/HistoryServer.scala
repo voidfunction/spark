@@ -277,11 +277,12 @@ object HistoryServer extends Logging {
 
    */
   def main(argStrings: Array[String]): Unit = {
-//    val eventLog = "file:///C:/Users/ltian/IdeaProjects/sparktest/tmp/spark-events"
-//    conf.set("spark.history.fs.logDirectory", eventLog)
-//    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555")
-//    conf.set("spark.ui.allowFramingFrom", "http://localhost")
-//    conf.set("spark.history.kerberos.enabled", "false")
+    val eventLog = "file:///D:/000_OpenSourceAnalyticsandNoSQL/016_SparkLogPane/Temp/SparkEventLog/"
+    conf.set("spark.history.fs.logDirectory", eventLog)
+    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555/datatab/index.html")
+    conf.set("spark.hdinsight.logFrame", "http://localhost:5555/logtab/index.html")
+    conf.set("spark.ui.allowFramingFrom", "http://localhost")
+    conf.set("spark.history.kerberos.enabled", "false")
 //    conf.set("spark.history.ui.port", "18080")
 
     Utils.initDaemon(log)
