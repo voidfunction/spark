@@ -18,10 +18,9 @@
 package org.apache.spark.ui.hdinsight.log
 
 import javax.servlet.http.HttpServletRequest
+import scala.xml.Node
 
 import org.apache.spark.ui.{UIUtils, WebUIPage}
-
-import scala.xml.Node
 
 private[ui] class LogPage(parent: LogTab) extends WebUIPage("") {
   def render(request: HttpServletRequest): Seq[Node] = {

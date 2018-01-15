@@ -17,9 +17,6 @@
 
 package org.apache.spark.ui.hdinsight.log
 
-import org.apache.spark.annotation.DeveloperApi
-import org.apache.spark.hdi.{InputInformationUpdate, OutputEvent, TableOutputEvent}
-import org.apache.spark.scheduler._
 import org.apache.spark.ui._
 
 private[ui] class LogTab(parent: SparkUI) extends SparkUITab(parent, "log") {
