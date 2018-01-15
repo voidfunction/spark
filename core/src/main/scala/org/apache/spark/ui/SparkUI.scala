@@ -28,6 +28,7 @@ import org.apache.spark.status.api.v1.{ApiRootResource, ApplicationAttemptInfo, 
 import org.apache.spark.storage.StorageStatusListener
 import org.apache.spark.ui.JettyUtils._
 import org.apache.spark.ui.hdinsight.data.{DataListener, DataTab}
+import org.apache.spark.ui.hdinsight.log.{LogTab}
 import org.apache.spark.ui.env.{EnvironmentListener, EnvironmentTab}
 import org.apache.spark.ui.exec.{ExecutorsListener, ExecutorsTab}
 import org.apache.spark.ui.jobs.{JobProgressListener, JobsTab, StagesTab}
@@ -73,6 +74,7 @@ private[spark] class SparkUI private (
     attachTab(new EnvironmentTab(this))
     attachTab(new ExecutorsTab(this))
     attachTab(new DataTab(this))
+    attachTab(new LogTab(this))
     attachHandler(createStaticHandler(SparkUI.STATIC_RESOURCE_DIR, "/static"))
     attachHandler(createRedirectHandler("/", "/jobs/", basePath = basePath))
     attachHandler(ApiRootResource.getServletHandler(this))
