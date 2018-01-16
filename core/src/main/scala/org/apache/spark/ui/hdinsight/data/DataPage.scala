@@ -42,7 +42,7 @@ private[ui] class DataPage(parent: DataTab) extends WebUIPage("") {
           window.addEventListener('message', function(event) {
             if (event.data.eventType === 'iframeReady' && event.data.data === 'ready'){
               var dataFrame = document.getElementById('datatabiframe');
-              dataFrame.contentWindow.postMessage(ApplicationDataInfo, '*');
+              dataFrame.contentWindow.postMessage({"inputAndOutputs": ApplicationDataInfo, "source": window.location.origin}, '*');
             }
           });""")};
     </script>

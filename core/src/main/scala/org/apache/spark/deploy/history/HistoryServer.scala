@@ -67,14 +67,13 @@ class HistoryServer(
 
   private val loaderServlet = new HttpServlet {
     protected override def doGet(req: HttpServletRequest, res: HttpServletResponse): Unit = {
-      // handle the request by HDInsight component if 'hdi-request' is exists in request headers
-      if (req.getHeader("hdi-request") != null) {
-        DataUtils.handleAppDataRequest(req, res)
-        return
-      }
       // Parse the URI created by getAttemptURI(). It contains an app ID and an optional
       // attempt ID (separated by a slash).
       val parts = Option(req.getPathInfo()).getOrElse("").split("/")
+      if (parts(1).equals("data")) {
+          DataUtils.handleAppDataRequest(req, res)
+          return
+      }
       if (parts.length < 2) {
         res.sendError(HttpServletResponse.SC_BAD_REQUEST,
           s"Unexpected path info in request (URI = ${req.getRequestURI()}")
@@ -132,6 +131,7 @@ class HistoryServer(
     val contextHandler = new ServletContextHandler
     contextHandler.setContextPath(HistoryServer.UI_PATH_PREFIX)
     contextHandler.addServlet(new ServletHolder(loaderServlet), "/*")
+
     attachHandler(contextHandler)
   }
 
@@ -270,20 +270,22 @@ object HistoryServer extends Logging {
   val UI_PATH_PREFIX = "/history"
   /*
     properties
-      * spark.history.fs.logDirectory
+      * spark.history.fs.logDirectory for example: wasb://mycontainer@mystorageaccount.core.window.net/logroot
       * spark.ui.allowFramingFrom
       * spark.hdinsight.dataFrame
+      * spark.hdinsight.clusterUrl for example: https:myclustername.azurehdinsight.net
+      * spark.hdinsight.clusterUserName
+      * spark.hdinsight.clusterPassword
       are required for standalone history server
 
    */
   def main(argStrings: Array[String]): Unit = {
-    val eventLog = "file:///D:/000_OpenSourceAnalyticsandNoSQL/016_SparkLogPane/Temp/SparkEventLog/"
-    conf.set("spark.history.fs.logDirectory", eventLog)
-    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555/datatab/index.html")
-    conf.set("spark.hdinsight.logFrame", "http://localhost:5555/logtab/index.html")
-    conf.set("spark.ui.allowFramingFrom", "http://localhost")
-    conf.set("spark.history.kerberos.enabled", "false")
-//    conf.set("spark.history.ui.port", "18080")
+//    val eventLogPath = ""
+//    conf.set("spark.history.fs.logDirectory", eventLogPath)
+//    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555/datatab/index.html")
+//    conf.set("spark.hdinsight.logFrame", "http://localhost:5555/logtab/index.html")
+//    conf.set("spark.ui.allowFramingFrom", "http://localhost")
+//    conf.set("spark.history.kerberos.enabled", "false")
 
     Utils.initDaemon(log)
     new HistoryServerArguments(conf, argStrings)
@@ -291,12 +293,15 @@ object HistoryServer extends Logging {
     assert(conf.getOption("spark.hdinsight.dataFrame").isDefined)
     assert(conf.getOption("spark.ui.allowFramingFrom").isDefined)
     assert(conf.getOption("spark.history.fs.logDirectory").isDefined)
+    assert(conf.getOption("spark.hdinsight.clusterUrl").isDefined)
+    assert(conf.getOption("spark.hdinsight.clusterUserName").isDefined)
+    assert(conf.getOption("spark.hdinsight.clusterPassword").isDefined)
 
     initSecurity()
     val securityManager = createSecurityManager(conf)
 
     val providerName = conf.getOption("spark.history.provider")
-      .getOrElse(classOf[FsHistoryProvider].getName())
+      .getOrElse(classOf[FsHistoryProvider].getName)
     val provider = Utils.classForName(providerName)
       .getConstructor(classOf[SparkConf])
       .newInstance(conf)
@@ -313,6 +318,7 @@ object HistoryServer extends Logging {
     while(true) { Thread.sleep(Int.MaxValue) }
   }
 
+  def getConf: SparkConf = conf
   /**
    * Create a security manager.
    * This turns off security in the SecurityManager, so that the History Server can start
