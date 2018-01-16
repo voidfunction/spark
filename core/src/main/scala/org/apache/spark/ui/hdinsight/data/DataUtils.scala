@@ -17,7 +17,10 @@
 
 package org.apache.spark.ui.hdinsight.data
 
+import java.net.URLDecoder
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
+
+import org.apache.hadoop.fs.Path
 
 object DataUtils {
   import org.json4s.JsonDSL._
@@ -37,7 +40,21 @@ object DataUtils {
 
   // TODO: handle data related actions
   def handleAppDataRequest(req: HttpServletRequest, res: HttpServletResponse): Unit = {
+    res.addHeader("Access-Control-Allow-Origin", "*")
+    val queries = req.getQueryString.split("&").map(elem => {
+      val elems = elem.split("=")
+      (URLDecoder.decode(elems(0), "utf-8"), URLDecoder.decode(elems(1), "utf-8"))
+    }).toMap
+    val filePath = queries.get("url").get
+    val format = queries.get("format").getOrElse("text")
+    val rowCount = queries.get("rowCount").getOrElse("100").toInt
+    val response = LivyClient.getResult(filePath, format, rowCount)
 
+    res.setStatus(200)
+    res.setHeader("Content-Type", "application/octet-stream")
+    res.setHeader("Content-Disposition", s"""attachment; filename="${new Path(filePath).getName}""")
+    res.getWriter.print(response)
+    res.getWriter.close()
   }
 }
 
@@ -47,18 +64,4 @@ case class InputInfo(inputsetid: Int, format: String, path: String) {
 
 case class OutputInfo(provider: String, mode: String, path: String) {
   override def toString: String = s"[$provider,$mode,$path]"
-}
-
-object JsonExample extends App {
-  import org.json4s._
-  import org.json4s.JsonDSL._
-  import org.json4s.jackson.JsonMethods._
-
-  case class Winner(id: Long, numbers: List[Int])
-  case class Lotto(id: Long, winningNumbers: List[Int],
-                   winners: List[Winner],
-                   drawDate: Option[java.util.Date])
-
-  val winners = List(Winner(23, List(2, 45, 34, 23, 3, 5)), Winner(54, List(52, 3, 12, 11, 18, 22)))
-  val lotto = Lotto(5, List(2, 45, 34, 23, 7, 5, 3), winners, None)
 }
