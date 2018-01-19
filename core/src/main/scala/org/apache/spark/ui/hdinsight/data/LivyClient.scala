@@ -20,7 +20,7 @@ package org.apache.spark.ui.hdinsight.data
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.{HttpGet, HttpPost}
+import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpPost}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClients, SystemDefaultCredentialsProvider}
 import org.apache.http.util.EntityUtils
@@ -29,6 +29,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
 import org.apache.spark.deploy.history.HistoryServer
+import org.apache.spark.util.ShutdownHookManager
 
 class LivyClient(val clusterConnectString: String,
                 val userName: String,
@@ -137,6 +138,18 @@ class LivyClient(val clusterConnectString: String,
       Thread.sleep(100)
     }
   }
+
+  // try to close the session
+  def closeSession: Option[Boolean] = {
+    sessionId.map(id => {
+      val url = s"$clusterConnectString/livy/sessions/$id"
+      val deleteUrl = new HttpDelete(url)
+      val response = httpClient.execute(deleteUrl)
+      val responseEntity = EntityUtils.toString(response.getEntity)
+      val responseObj = parse(responseEntity)
+      (responseObj \ "msg").extract[String].equals("deleted")
+    })
+  }
 }
 
 object LivyClient {
@@ -144,6 +157,12 @@ object LivyClient {
   private val clusterConnectionString = conf.get("spark.hdinsight.clusterUrl")
   private val userName = conf.get("spark.hdinsight.clusterUserName")
   private val password = conf.get("spark.hdinsight.clusterPassword")
+
+  // scalastyle:off
+  Runtime.getRuntime.addShutdownHook(new Thread {
+    override def run(): Unit = client.closeSession
+  })
+  // scalastyle:on
 
   lazy val client = new LivyClient(clusterConnectionString,
     userName,

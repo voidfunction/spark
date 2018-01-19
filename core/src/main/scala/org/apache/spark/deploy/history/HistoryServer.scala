@@ -280,12 +280,17 @@ object HistoryServer extends Logging {
 
    */
   def main(argStrings: Array[String]): Unit = {
-//    val eventLogPath = ""
-//    conf.set("spark.history.fs.logDirectory", eventLogPath)
-//    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555/datatab/index.html")
-//    conf.set("spark.hdinsight.logFrame", "http://localhost:5555/logtab/index.html")
-//    conf.set("spark.ui.allowFramingFrom", "http://localhost")
-//    conf.set("spark.history.kerberos.enabled", "false")
+
+    val eventLogPath = "file:///C:/Users/ltian/IdeaProjects/sparktest/tmp/spark-events"
+
+    conf.set("spark.history.fs.logDirectory", eventLogPath)
+    conf.set("spark.hdinsight.dataFrame", "http://localhost:8080/datatab/index.html")
+    conf.set("spark.hdinsight.logFrame", "http://localhost:8080/logtab/index.html")
+    conf.set("spark.ui.allowFramingFrom", "http://localhost:8080")
+    conf.set("spark.history.kerberos.enabled", "false")
+    conf.set("spark.hdinsight.clusterUrl", "https://spark2withblob.azurehdinsight.net/")
+    conf.set("spark.hdinsight.clusterUserName", "admin")
+    conf.set("spark.hdinsight.clusterPassword", "Pa$$w0rd1234")
 
     Utils.initDaemon(log)
     new HistoryServerArguments(conf, argStrings)
