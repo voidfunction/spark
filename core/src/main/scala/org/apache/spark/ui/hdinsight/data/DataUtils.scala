@@ -21,6 +21,7 @@ import java.net.URLDecoder
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import org.apache.hadoop.fs.Path
+import scala.collection.mutable.ListBuffer
 
 object DataUtils {
   import org.json4s.JsonDSL._
@@ -35,6 +36,37 @@ object DataUtils {
         ("outputs" -> outputs.map {
           output => List(output.provider, output.mode, output.path)
         })
+    compact(render(json))
+  }
+
+  def getGraphWrapperInfo(nodes: Seq[GraphNodeInfo], edges: Seq[GraphEdgeInfo], time: Long): String = {
+    val json =
+      "data" ->
+        (("time" -> time)
+          ~
+        ("edges" -> edges.map {
+          edge => (("id" -> edge.id) ~ ("childId" -> edge.childId))
+        }) ~
+          ("nodes" -> nodes.map {
+            node => ("dataWritten" -> node.dataWritten) ~
+              ("dataRead" -> node.dataRead) ~
+              ("totalCount" -> node.totalCount) ~
+              ("failedCount" -> node.failedCount) ~
+              ("rowCount" -> node.rowCount) ~
+              ("time" -> node.time) ~
+              ("id" -> node.id) ~
+              ("name" -> node.name) ~
+              ("runningCount" -> node.runningCount) ~
+              ("succeededCount" -> node.succeededCount) ~
+              ("playBackDataSlice" -> node.playBackDataSlice.map { playData =>
+                ("displayComplete" -> playData.displayComplete) ~
+                  ("percentComplete" -> playData.percentComplete) ~
+                  ("percentFailed" -> playData.percentFailed) ~
+                  ("percentProgress" -> playData.percentProgress) ~
+                  ("read" -> playData.read) ~
+                  ("time" -> playData.time) ~
+                  ("write" -> playData.write)}
+              )}))
     compact(render(json))
   }
 
@@ -56,6 +88,33 @@ object DataUtils {
     res.getWriter.print(response)
     res.getWriter.close()
   }
+}
+
+class GraphNodeInfo(var id: Int, var name: String) {
+  var rowCount: Long = 0
+  var totalCount: Int = 0
+  var succeededCount: Int = 0
+  var runningCount: Int = 0
+  var failedCount: Int = 0
+  var dataRead: Long = 0
+  var dataWritten: Long = 0
+  var time: Long = 0
+  var playBackDataSlice = ListBuffer[StagePlayBackDataSlice]()
+}
+
+case class StagePlayBackDataSlice(displayComplete: String,
+                                  percentComplete: Int,
+                                  percentFailed: Int,
+                                  percentProgress: Int,
+                                  read: Long,
+                                  write: Long,
+                                  time: Long
+                                 ) {
+
+}
+
+case class GraphEdgeInfo(id: Int, childId: Int) {
+  override def toString: String = s"[$id, $childId]"
 }
 
 case class InputInfo(inputsetid: Int, format: String, path: String) {
