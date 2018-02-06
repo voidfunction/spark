@@ -31,8 +31,7 @@ private[ui] class JobGraphTab(parent: SparkUI) extends SparkUITab(parent, "graph
   attachPage(new JobGraphPage(this))
 }
 
-@DeveloperApi
-class JobInfoListener extends SparkListener {
+class JobInfo(val jobId: Int) {
   var nodes = Map[Int, GraphNodeInfo]()
   var allTasksProfiles = LinkedHashMap[Int, LinkedHashMap[Int, ListBuffer[SparkListenerTaskEnd]]]()
   var stageTasksProfiles = LinkedHashMap[Int, LinkedHashMap[Long, SparkListenerTaskEnd]]()
@@ -42,7 +41,6 @@ class JobInfoListener extends SparkListener {
   var endTime: Long = 0
   val timeScale = 301
   var time = 0L
-
   def populateGraphNodeAndEdge(): Unit = {
     for ((stageId, stage) <- nodes) {
       stage.totalCount = stageTasksProfiles(stageId).size
@@ -120,50 +118,64 @@ class JobInfoListener extends SparkListener {
       }
     }
   }
+}
+
+@DeveloperApi
+class JobInfoListener extends SparkListener {
+  var jobInfos = LinkedHashMap[Int, JobInfo]()
+  var nodeIds = LinkedHashMap[Int, Int]()
 
   override def onTaskEnd(taskEnd: SparkListenerTaskEnd): Unit = {
-    allTasksProfiles(taskEnd.stageId)(taskEnd.stageAttemptId) += taskEnd
-    stageTasksProfiles(taskEnd.stageId) += taskEnd.taskInfo.taskId -> taskEnd
+    val stageId = taskEnd.stageId
+    val jobInfo = this.jobInfos(this.nodeIds(stageId))
+    jobInfo.allTasksProfiles(taskEnd.stageId)(taskEnd.stageAttemptId) += taskEnd
+    jobInfo.stageTasksProfiles(taskEnd.stageId) += taskEnd.taskInfo.taskId -> taskEnd
   }
 
   override def onStageSubmitted(stageSubmitted: SparkListenerStageSubmitted): Unit = {
     val stageId = stageSubmitted.stageInfo.stageId
     val attemptId = stageSubmitted.stageInfo.attemptId
-    if(!allTasksProfiles.keySet.exists(_ == stageId)) {
-      allTasksProfiles += stageId -> LinkedHashMap[Int, ListBuffer[SparkListenerTaskEnd]]()
+    val jobInfo = this.jobInfos(this.nodeIds(stageId))
+    if(!jobInfo.allTasksProfiles.keySet.exists(_ == stageId)) {
+      jobInfo.allTasksProfiles += stageId -> LinkedHashMap[Int, ListBuffer[SparkListenerTaskEnd]]()
     }
 
-    if(!allTasksProfiles(stageId).keySet.exists(_ == attemptId)) {
-      allTasksProfiles(stageId) +=  attemptId -> ListBuffer[SparkListenerTaskEnd]()
+    if(!jobInfo.allTasksProfiles(stageId).keySet.exists(_ == attemptId)) {
+      jobInfo.allTasksProfiles(stageId) +=  attemptId -> ListBuffer[SparkListenerTaskEnd]()
     }
 
-    stageTasksProfiles += stageId -> LinkedHashMap[Long, SparkListenerTaskEnd]()
+    jobInfo.stageTasksProfiles += stageId -> LinkedHashMap[Long, SparkListenerTaskEnd]()
   }
 
   override def onStageCompleted(stageCompleted: SparkListenerStageCompleted): Unit = {
     val stageId = stageCompleted.stageInfo.stageId
     val attemptId = stageCompleted.stageInfo.attemptId
-    if (!stagesProfiles.keySet.exists(_ == stageId)) {
-      stagesProfiles += stageId -> LinkedHashMap[Int, SparkListenerStageCompleted]()
+    val jobInfo = this.jobInfos(this.nodeIds(stageId))
+    if (!jobInfo.stagesProfiles.keySet.exists(_ == stageId)) {
+      jobInfo.stagesProfiles += stageId -> LinkedHashMap[Int, SparkListenerStageCompleted]()
     }
 
-    stagesProfiles(stageId) +=  attemptId -> stageCompleted
+    jobInfo.stagesProfiles(stageId) +=  attemptId -> stageCompleted
   }
 
   override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
-    jobStart.stageInfos.foreach(stage =>
-      this.nodes += stage.stageId -> new GraphNodeInfo(stage.stageId, stage.name))
+    val jobInfo = new JobInfo(jobStart.jobId)
+    jobStart.stageInfos.foreach(stage => {
+      jobInfo.nodes += stage.stageId -> new GraphNodeInfo(stage.stageId, stage.name)
+      this.nodeIds += stage.stageId -> jobStart.jobId
+    })
 
     jobStart.stageInfos.foreach(
       stage => stage.parentIds.foreach(id =>
-        this.edges = this.edges ++ Seq(GraphEdgeInfo(stage.stageId, id)))
+        jobInfo.edges = jobInfo.edges ++ Seq(GraphEdgeInfo(stage.stageId, id)))
     )
-    this.startTime = jobStart.time
+    jobInfo.startTime = jobStart.time
+    this.jobInfos(jobStart.jobId) = jobInfo
   }
 
   override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
-    this.endTime = jobEnd.time
-    this.populateGraphNodeAndEdge()
-    this.populateStagePlaybackSliceStatistics()
+    this.jobInfos(jobEnd.jobId).endTime = jobEnd.time
+    this.jobInfos(jobEnd.jobId).populateGraphNodeAndEdge()
+    this.jobInfos(jobEnd.jobId).populateStagePlaybackSliceStatistics()
   }
 }

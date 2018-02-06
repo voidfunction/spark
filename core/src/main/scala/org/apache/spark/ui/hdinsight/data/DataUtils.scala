@@ -39,34 +39,39 @@ object DataUtils {
     compact(render(json))
   }
 
-  def getGraphWrapperInfo(nodes: Seq[GraphNodeInfo], edges: Seq[GraphEdgeInfo], time: Long): String = {
+  def getGraphWrapperInfo(jobInfos: Iterable[JobInfo]): String = {
     val json =
-      "data" ->
-        (("time" -> time)
-          ~
-        ("edges" -> edges.map {
-          edge => (("id" -> edge.id) ~ ("childId" -> edge.childId))
-        }) ~
-          ("nodes" -> nodes.map {
-            node => ("dataWritten" -> node.dataWritten) ~
-              ("dataRead" -> node.dataRead) ~
-              ("totalCount" -> node.totalCount) ~
-              ("failedCount" -> node.failedCount) ~
-              ("rowCount" -> node.rowCount) ~
-              ("time" -> node.time) ~
-              ("id" -> node.id) ~
-              ("name" -> node.name) ~
-              ("runningCount" -> node.runningCount) ~
-              ("succeededCount" -> node.succeededCount) ~
-              ("playBackDataSlice" -> node.playBackDataSlice.map { playData =>
-                ("displayComplete" -> playData.displayComplete) ~
-                  ("percentComplete" -> playData.percentComplete) ~
-                  ("percentFailed" -> playData.percentFailed) ~
-                  ("percentProgress" -> playData.percentProgress) ~
-                  ("read" -> playData.read) ~
-                  ("time" -> playData.time) ~
-                  ("write" -> playData.write)}
-              )}))
+      "data" -> jobInfos.map(
+          jobinfo => {
+            (("time" -> jobinfo.time)
+              ~
+              ("id" -> jobinfo.jobId)
+              ~
+              ("edges" -> jobinfo.edges.map {
+                edge => (("id" -> edge.id) ~ ("childId" -> edge.childId))
+              })
+              ~
+              ("nodes" -> jobinfo.nodes.values.map {
+                node => ("dataWritten" -> node.dataWritten) ~
+                  ("dataRead" -> node.dataRead) ~
+                  ("totalCount" -> node.totalCount) ~
+                  ("failedCount" -> node.failedCount) ~
+                  ("rowCount" -> node.rowCount) ~
+                  ("time" -> node.time) ~
+                  ("id" -> node.id) ~
+                  ("name" -> node.name) ~
+                  ("runningCount" -> node.runningCount) ~
+                  ("succeededCount" -> node.succeededCount) ~
+                  ("playBackDataSlice" -> node.playBackDataSlice.map { playData =>
+                    ("displayComplete" -> playData.displayComplete) ~
+                      ("percentComplete" -> playData.percentComplete) ~
+                      ("percentFailed" -> playData.percentFailed) ~
+                      ("percentProgress" -> playData.percentProgress) ~
+                      ("read" -> playData.read) ~
+                      ("time" -> playData.time) ~
+                      ("write" -> playData.write)
+                  })
+              }))})
     compact(render(json))
   }
 

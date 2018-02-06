@@ -284,6 +284,7 @@ object HistoryServer extends Logging {
 //    conf.set("spark.history.fs.logDirectory", eventLogPath)
 //    conf.set("spark.hdinsight.dataFrame", "http://localhost:5555/datatab/index.html")
 //    conf.set("spark.hdinsight.logFrame", "http://localhost:5555/logtab/index.html")
+//    conf.set("spark.hdinsight.graphFrame", "http://localhost:5555/graphtab/index.html")
 //    conf.set("spark.ui.allowFramingFrom", "http://localhost")
 //    conf.set("spark.history.kerberos.enabled", "false")
 
@@ -291,6 +292,7 @@ object HistoryServer extends Logging {
     new HistoryServerArguments(conf, argStrings)
 
     assert(conf.getOption("spark.hdinsight.dataFrame").isDefined)
+    assert(conf.getOption("spark.hdinsight.graphFrame").isDefined)
     assert(conf.getOption("spark.ui.allowFramingFrom").isDefined)
     assert(conf.getOption("spark.history.fs.logDirectory").isDefined)
     assert(conf.getOption("spark.hdinsight.clusterUrl").isDefined)

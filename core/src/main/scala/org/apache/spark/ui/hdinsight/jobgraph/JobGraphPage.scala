@@ -31,7 +31,7 @@ private[ui] class JobGraphPage(parent: JobGraphTab) extends WebUIPage("") {
   def graphTabInfoNode: Seq[Node] = {
     <script type="text/javascript">
       ApplicationDataInfo =
-      {scala.xml.Unparsed(DataUtils.getGraphWrapperInfo(listener.nodes.values.toList, listener.edges, listener.time))};
+      {scala.xml.Unparsed(DataUtils.getGraphWrapperInfo(listener.jobInfos.values))};
     </script>
   }
 
