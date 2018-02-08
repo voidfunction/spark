@@ -29,6 +29,7 @@ private[ui] class JobGraphPage(parent: JobGraphTab) extends WebUIPage("") {
 //  private def inputPropertyHeader = Seq("Format", "Path")
 
   def graphTabInfoNode: Seq[Node] = {
+    listener.generateJobGraphWithPlayBack()
     <script type="text/javascript">
       ApplicationDataInfo =
       {scala.xml.Unparsed(DataUtils.getGraphWrapperInfo(listener.jobInfos.values))};
